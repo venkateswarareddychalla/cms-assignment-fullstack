@@ -17,7 +17,8 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchPages = async () => {
     try {
-      const res = await axios.get(process.env.NEXT_PUBLIC_API_URL + '/content' || 'http://localhost:5000/api/v1/content');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend-murex-five-72.vercel.app/api/v1';
+      const res = await axios.get(`${apiUrl}/content`);
       setPages(res.data.data || []);
     } catch (error) {
       console.error(error);

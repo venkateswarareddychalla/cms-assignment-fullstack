@@ -7,7 +7,8 @@ export const revalidate = 60;
 // Fetch page data by slug
 async function getPageData(slug: string) {
   try {
-    const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://backend:5000/api/v1'}/content/${slug}`);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://backend-murex-five-72.vercel.app/api/v1';
+    const res = await axios.get(`${apiUrl}/content/${slug}`);
     return res.data.data;
   } catch (error) {
     return null;
