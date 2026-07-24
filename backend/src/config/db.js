@@ -6,7 +6,11 @@ let db;
 
 const connectDB = () => {
   try {
-    const dbPath = path.resolve(__dirname, '../../database.sqlite');
+    // Vercel serverless functions are read-only except for /tmp
+    const isVercel = process.env.VERCEL || process.env.NODE_ENV === 'production';
+    const dbPath = isVercel 
+      ? path.join('/tmp', 'database.sqlite')
+      : path.resolve(__dirname, '../../database.sqlite');
     
     // Connect to SQLite
     db = new Database(dbPath, { verbose: console.log });
