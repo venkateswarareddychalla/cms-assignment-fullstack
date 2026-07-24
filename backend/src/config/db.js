@@ -1,13 +1,48 @@
-const mongoose = require('mongoose');
+const Database = require('better-sqlite3');
+const path = require('path');
+const fs = require('fs');
 
-const connectDB = async () => {
+let db;
+
+const connectDB = () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/cms');
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    const dbPath = path.resolve(__dirname, '../../database.sqlite');
+    
+    // Connect to SQLite
+    db = new Database(dbPath, { verbose: console.log });
+    console.log(`SQLite Connected at ${dbPath}`);
+
+    // Create Admins Table
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS admins (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+      )
+    `).run();
+
+    // Create Pages Table
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS pages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        blocks TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run();
+
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.error(`Error connecting to SQLite: ${error.message}`);
     process.exit(1);
   }
 };
 
-module.exports = connectDB;
+const getDB = () => {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  return db;
+};
+
+module.exports = { connectDB, getDB };

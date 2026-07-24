@@ -1,10 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('./config/db');
+const { connectDB, getDB } = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
-const Admin = require('./models/Admin');
-const bcrypt = require('bcryptjs');
 
 // Load env vars
 dotenv.config();
@@ -28,14 +26,12 @@ app.use('/api/v1/content', require('./routes/contentRoutes'));
 app.use(errorHandler);
 
 // Seed default admin user for testing
-const seedAdmin = async () => {
+const seedAdmin = () => {
   try {
-    const adminExists = await Admin.findOne({ username: 'admin' });
+    const db = getDB();
+    const adminExists = db.prepare('SELECT * FROM admins WHERE username = ?').get('admin');
     if (!adminExists) {
-      await Admin.create({
-        username: 'admin',
-        password: 'admin123'
-      });
+      db.prepare('INSERT INTO admins (username, password) VALUES (?, ?)').run('admin', 'admin123');
       console.log('Default admin seeded (admin / admin123)');
     }
   } catch (error) {
@@ -45,7 +41,10 @@ const seedAdmin = async () => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  await seedAdmin();
+  seedAdmin();
 });
+
+// Export for vercel serverless
+module.exports = app;
