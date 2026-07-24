@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  database:
+    image: mongo:6
+    container_name: cms_database
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - cms_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cms_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://database:27017/cms
+      - JWT_SECRET=supersecretjwtkey_change_in_production
+    depends_on:
+      - database
+    networks:
+      - cms_network
+
+  admin-frontend:
+    build:
+      context: ./admin-frontend
+      dockerfile: Dockerfile
+    container_name: cms_admin_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - cms_network
+
+  public-frontend:
+    build:
+      context: ./public-frontend
+      dockerfile: Dockerfile
+    container_name: cms_public_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - cms_network
+
+volumes:
+  mongo_data:
+
+networks:
+  cms_network:
+    driver: bridge
